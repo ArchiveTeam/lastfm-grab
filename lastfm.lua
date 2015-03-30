@@ -29,8 +29,8 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
   end
   
   if item_type == "forum" and (downloaded[url] ~= true or addedtolist[url] ~= true) then
-    if string.match(url, "/"..item_value.."[0-9][0-9][0-9]") then
-      if not string.match(url, "/"..item_value.."[0-9][0-9][0-9][0-9]") then
+    if string.match(url, "/"..item_value.."[0-9][0-9]") then
+      if not string.match(url, "/"..item_value.."[0-9][0-9][0-9]") then
         addedtolist[url] = true
         return true
       else
@@ -61,12 +61,16 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     if string.match(url, "/"..item_value) then
       html = read_file(file)
       for newurl in string.gmatch(html, '"(/[^"]+)"') do
-        if (string.match(newurl, "/"..item_value.."[0-9][0-9][0-9]/") and not string.match(newurl, "/[0-9]+/_/[0-9]+/_/[0-9]+")) then
-          local newurl1 = "http://www.last.fm"..newurl
-          check(newurl1)
-        elseif string.match(newurl, "/[0-9]+/_/[0-9]+/_/[0-9]+") then
-          local newurl2 = string.match(url, "(/.+[0-9]+/_/[0-9]+)/_/")
+        if string.match(newurl, "/[0-9]+/_/[0-9]+/_/[0-9]+") and string.match(newurl, "/"..item_value.."[0-9][0-9]/") then
+          local newurl2 = string.match(newurl, "(/.+[0-9]+/_/[0-9]+)/_/")
           local newurl1 = "http://www.last.fm"..newurl2
+          local newurl3 = "http://www.last.fm"..newurl
+          local newurl4 = "http://www.last.fm"..newurl2.."/1"
+          check(newurl1)
+          check(newurl3)
+          check(newurl4)
+        elseif string.match(newurl, "/"..item_value.."[0-9][0-9]/") then
+          local newurl1 = "http://www.last.fm"..newurl
           check(newurl1)
         end
       end
@@ -75,7 +79,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
         check(newurl)
       end
       for newurl in string.gmatch(html, '"(https?://[^"]+)"') do
-        if string.match(newurl, "%.jpg") or string.match(newurl, "%.png") or string.match(newurl, "%.js") then
+        if string.match(newurl, "%.jpg") or string.match(newurl, "%.png") or string.match(newurl, "%.gif") or string.match(newurl, "%.js") or string.match(newurl, "%.css") then
           check(newurl)
         end
       end
@@ -104,7 +108,9 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     end
   end
   
-  if (status_code == 0 or status_code >= 500 or (status_code >= 400 and status_code ~= 404 and status_code ~= 403)) and not string.match(url, "last%.fm") then    
+  if string.match(url["url"], "/[0-9]+/_/[0-9]+/_/[0-9]+") and status_code == 302 then
+    return wget.actions.EXIT
+  elseif (status_code == 0 or status_code >= 500 or (status_code >= 400 and status_code ~= 404 and status_code ~= 403)) and not string.match(url["url"], "last%.fm") then    
     io.stdout:write("Url skipped "..http_stat.statcode..". \n")
     io.stdout:flush()
     return wget.actions.EXIT
