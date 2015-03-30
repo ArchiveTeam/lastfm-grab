@@ -61,8 +61,12 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     if string.match(url, "/"..item_value) then
       html = read_file(file)
       for newurl in string.gmatch(html, '"(/[^"]+)"') do
-        if string.match(newurl, "/"..item_value.."[0-9][0-9][0-9]/") and not string.match(newurl, "/[0-9]+/_/[0-9]+/_/[0-9]+") then
+        if (string.match(newurl, "/"..item_value.."[0-9][0-9][0-9]/") and not string.match(newurl, "/[0-9]+/_/[0-9]+/_/[0-9]+")) then
           local newurl1 = "http://www.last.fm"..newurl
+          check(newurl1)
+        elseif string.match(newurl, "/[0-9]+/_/[0-9]+/_/[0-9]+") then
+          local newurl2 = string.match(url, "(/.+[0-9]+/_/[0-9]+)/_/")
+          local newurl1 = "http://www.last.fm"..newurl2
           check(newurl1)
         end
       end
@@ -100,7 +104,11 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     end
   end
   
-  if status_code >= 500 or
+  if (status_code == 0 or status_code >= 500 or (status_code >= 400 and status_code ~= 404 and status_code ~= 403)) and not string.match(url, "last%.fm") then    
+    io.stdout:write("Url skipped "..http_stat.statcode..". \n")
+    io.stdout:flush()
+    return wget.actions.EXIT
+  elseif status_code >= 500 or
     (status_code >= 400 and status_code ~= 404 and status_code ~= 403) then
     io.stdout:write("\nServer returned "..http_stat.statcode..". Sleeping.\n")
     io.stdout:flush()
@@ -121,7 +129,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     io.stdout:flush()
 
     os.execute("sleep 10")
-
+    
     tries = tries + 1
 
     if tries >= 10 then
