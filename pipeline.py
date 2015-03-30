@@ -57,7 +57,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20150330.01"
+VERSION = "20150330.02"
 USER_AGENT = 'ArchiveTeam'
 TRACKER_ID = 'lastfm'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -199,8 +199,7 @@ class WgetArgs(object):
         if item_type == 'forum':
             suffixesa = string.digits
             suffixesb = string.digits
-            suffixesc = string.digits
-            for url in ['http://www.last.fm/forum/_/{0}{1}{2}{3}'.format(item_value, a, b, c) for a in suffixesa for b in suffixesb for c in suffixesc]:
+            for url in ['http://www.last.fm/forum/_/{0}{1}{2}'.format(item_value, a, b) for a in suffixesa for b in suffixesb]:
                 wget_args.append(url)
         else:
             raise Exception('Unknown item')
@@ -236,7 +235,7 @@ pipeline = Pipeline(
     WgetDownload(
         WgetArgs(),
         max_tries=2,
-        accept_on_exit_code=[0, 8],
+        accept_on_exit_code=[0, 4, 8],
         env={
             "item_dir": ItemValue("item_dir"),
             "item_value": ItemValue("item_value"),
