@@ -178,7 +178,7 @@ class WgetArgs(object):
 #            "--page-requisites",
             "--timeout", "30",
             "--tries", "inf",
-            "--domains", "last.fm",
+#            "--domains", "last.fm",
             "--span-hosts",
             "--waitretry", "30",
             "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
@@ -194,13 +194,21 @@ class WgetArgs(object):
         item['item_type'] = item_type
         item['item_value'] = item_value
         
-        assert item_type in ('forum')
+        assert item_type in ('forum', 'forumlang')
         
         if item_type == 'forum':
             suffixesa = string.digits
             suffixesb = string.digits
             for url in ['http://www.last.fm/forum/_/{0}{1}{2}'.format(item_value, a, b) for a in suffixesa for b in suffixesb]:
                 wget_args.append(url)
+            wget_args.extend(["--domains", "last.fm"])
+        if item_type == 'forumlang':
+            suffixesa = string.digits
+            suffixesb = string.digits
+            sites = ["www.lastfm.de", "www.lastfm.es", "www.lastfm.fr", "www.lastfm.it", "www.lastfm.jp", "www.lastfm.pl", "www.lastfm.com.br", "www.lastfm.ru", "www.lastfm.se", "www.lastfm.com.tr", "cn.last.fm"]
+            for url in ['http://{3}/forum/_/{0}{1}{2}'.format(item_value, a, b, site) for a in suffixesa for b in suffixesb for site in sites]:
+                wget_args.append(url)
+            wget_args.extend(["--domains", "lastfm.de,lastfm.es,lastfm.fr,lastfm.it,lastfm.jp,lastfm.pl,lastfm.com.br,lastfm.ru,lastfm.se,lastfm.com.tr,cn.last.fm"])
         else:
             raise Exception('Unknown item')
         
