@@ -28,7 +28,7 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
     return false
   end
   
-  if item_type == "forum" and (downloaded[url] ~= true or addedtolist[url] ~= true) then
+  if (item_type == "forum" or item_type == "forumlang") and (downloaded[url] ~= true or addedtolist[url] ~= true) then
     if string.match(url, "/"..item_value.."[0-9][0-9]") then
       if not string.match(url, "/"..item_value.."[0-9][0-9][0-9]") then
         addedtolist[url] = true
@@ -72,6 +72,68 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
         elseif string.match(newurl, "/"..item_value.."[0-9][0-9]/") then
           local newurl1 = "http://www.last.fm"..newurl
           check(newurl1)
+        end
+      end
+      if string.match(url, "[0-9]+/_/[0-9]+") then
+        local newurl = string.match(url, "(https?://.+[0-9]+/_/[0-9]+)")
+        check(newurl)
+      end
+      for newurl in string.gmatch(html, '"(https?://[^"]+)"') do
+        if string.match(newurl, "%.jpg") or string.match(newurl, "%.png") or string.match(newurl, "%.gif") or string.match(newurl, "%.js") or string.match(newurl, "%.css") then
+          check(newurl)
+        end
+      end
+    end
+  elseif item_type == "forumlang" then
+    if string.match(url, "/"..item_value) then
+      html = read_file(file)
+      for newurl in string.gmatch(html, '"(/[^"]+)"') do
+        if string.match(newurl, "/[0-9]+/_/[0-9]+/_/[0-9]+") and string.match(newurl, "/"..item_value.."[0-9][0-9]/") then
+          local newurl2 = string.match(newurl, "(/.+[0-9]+/_/[0-9]+)/_/")          check("http://lastfm.de"..newurl2)
+          check("http://lastfm.es"..newurl2)
+          check("http://www.lastfm.fr"..newurl2)
+          check("http://www.lastfm.it"..newurl2)
+          check("http://www.lastfm.jp"..newurl2)
+          check("http://www.lastfm.pl"..newurl2)
+          check("http://www.lastfm.com.br"..newurl2)
+          check("http://www.lastfm.ru"..newurl2)
+          check("http://www.lastfm.se"..newurl2)
+          check("http://www.lastfm.com.tr"..newurl2)
+          check("http://cn.last.fm"..newurl2)
+          check("http://www.lastfm.de"..newurl)
+          check("http://www.lastfm.es"..newurl)
+          check("http://www.lastfm.fr"..newurl)
+          check("http://www.lastfm.it"..newurl)
+          check("http://www.lastfm.jp"..newurl)
+          check("http://www.lastfm.pl"..newurl)
+          check("http://www.lastfm.com.br"..newurl)
+          check("http://www.lastfm.ru"..newurl)
+          check("http://www.lastfm.se"..newurl)
+          check("http://www.lastfm.com.tr"..newurl)
+          check("http://cn.last.fm"..newurl)
+          check("http://www.lastfm.de"..newurl2.."/1")
+          check("http://www.lastfm.es"..newurl2.."/1")
+          check("http://www.lastfm.fr"..newurl2.."/1")
+          check("http://www.lastfm.it"..newurl2.."/1")
+          check("http://www.lastfm.jp"..newurl2.."/1")
+          check("http://www.lastfm.pl"..newurl2.."/1")
+          check("http://www.lastfm.com.br"..newurl2.."/1")
+          check("http://www.lastfm.ru"..newurl2.."/1")
+          check("http://www.lastfm.se"..newurl2.."/1")
+          check("http://www.lastfm.com.tr"..newurl2.."/1")
+          check("http://cn.last.fm"..newurl2.."/1")
+        elseif string.match(newurl, "/"..item_value.."[0-9][0-9]/") then
+          check("http://www.lastfm.de"..newurl)
+          check("http://www.lastfm.es"..newurl)
+          check("http://www.lastfm.fr"..newurl)
+          check("http://www.lastfm.it"..newurl)
+          check("http://www.lastfm.jp"..newurl)
+          check("http://www.lastfm.pl"..newurl)
+          check("http://www.lastfm.com.br"..newurl)
+          check("http://www.lastfm.ru"..newurl)
+          check("http://www.lastfm.se"..newurl)
+          check("http://www.lastfm.com.tr"..newurl)
+          check("http://cn.last.fm"..newurl)
         end
       end
       if string.match(url, "[0-9]+/_/[0-9]+") then
