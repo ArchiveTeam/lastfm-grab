@@ -30,7 +30,7 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
   
   if (item_type == "forum" or item_type == "forumlang") and (downloaded[url] ~= true or addedtolist[url] ~= true) then
     if string.match(url, "/"..item_value.."[0-9][0-9]") then
-      if not string.match(url, "/"..item_value.."[0-9][0-9][0-9]") then
+      if (string.match(url, "https?://last%.[^/]+/") or string.match(url, "https?://lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.last%.[^/]+/")) and not (string.match(url, "/"..item_value.."[0-9][0-9][0-9]")) then
         addedtolist[url] = true
         return true
       else
@@ -42,7 +42,6 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
       return false
     end
   end
-  
 end
 
 
@@ -51,7 +50,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   local html = nil
   
   local function check(url)
-    if (downloaded[url] ~= true and addedtolist[url] ~= true) and not string.match(url, "/static/") then
+    if (string.match(url, "https?://last%.[^/]+/") or string.match(url, "https?://lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.last%.[^/]+/")) and (downloaded[url] ~= true and addedtolist[url] ~= true) and not string.match(url, "/static/") then
       table.insert(urls, { url=url })
       addedtolist[url] = true
     end
