@@ -41,6 +41,12 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
     else
       return false
     end
+  elseif item_type == "forum" and (downloaded[url] ~= true or addedtolist[url] ~= true) then
+    if string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")) then
+      return true
+    else
+      return false
+    end
   end
 end
 
@@ -51,8 +57,16 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   
   local function check(url)
     if (string.match(url, "https?://last%.[^/]+/") or string.match(url, "https?://lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.last%.[^/]+/")) and (downloaded[url] ~= true and addedtolist[url] ~= true) and not string.match(url, "/static/") then
-      table.insert(urls, { url=url })
-      addedtolist[url] = true
+      if (item_type == "user" and (string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")))) or item_type ~= "user" then
+        if string.match(url, "&amp;") then
+          table.insert(urls, { url=string.gsub(url, "&amp;", "&") })
+          addedtolist[string.gsub(url, "&amp;", "&")] = true
+          addedtolist[url] = true
+        else
+          table.insert(urls, { url=url })
+          addedtolist[url] = true
+        end
+      end
     end
   end
   
@@ -88,7 +102,8 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       html = read_file(file)
       for newurl in string.gmatch(html, '"(/[^"]+)"') do
         if string.match(newurl, "/[0-9]+/_/[0-9]+/_/[0-9]+") and string.match(newurl, "/"..item_value.."[0-9][0-9]/") then
-          local newurl2 = string.match(newurl, "(/.+[0-9]+/_/[0-9]+)/_/")          check("http://lastfm.de"..newurl2)
+          local newurl2 = string.match(newurl, "(/.+[0-9]+/_/[0-9]+)/_/")
+          check("http://lastfm.de"..newurl2)
           check("http://lastfm.es"..newurl2)
           check("http://www.lastfm.fr"..newurl2)
           check("http://www.lastfm.it"..newurl2)
@@ -145,6 +160,26 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
         end
       end
     end
+  elseif item_type == "user" then
+    if string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")) then
+      html = read_file(file)
+      for newurl in string.gmatch(html, '"(https?://[^"]+)"') do
+        check(newurl)
+      end
+      for newurl in string.gmatch(html, "'(https?://[^']+)'") do
+        check(newurl)
+      end
+      if string.match(url, "%?") then
+        check(string.match(url, "(https?://[^%?]+)%?"))
+      end
+      for newurl in string.gmatch(html, '("/[^"]+)"') do
+        if string.match(newurl, '"//') then
+          check(string.gsub(newurl, '"//', 'http://'))
+        else
+          check(string.match(url, "(https?://[^/]+)/")..string.match(newurl, '"(.+)'))
+        end
+      end
+    end
   end
   
   return urls
@@ -167,6 +202,34 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     else
       downloaded[url.url] = true
     end
+  end
+
+  if status_code == 302 or status_code == 301 then
+    os.execute("python check302.py '"..url["url"].."'")
+    if io.open("302file", "r") == nil then
+      io.stdout:write("Something went wrong!! ABORTING  \n")
+      io.stdout:flush()
+      return wget.actions.ABORT
+    end
+    local redirfile = io.open("302file", "r")
+    local foundurl = redirfile:read("*all")
+    io.stdout:write("Found "..foundurl.." after redirect")
+    io.stdout:flush()
+    if downloaded[foundurl] == true or addedtolist[foundurl] == true then
+      io.stdout:write(", this url has already been downloaded or added to the list to be downloaded, so it is skipped.  \n")
+      io.stdout:flush()
+      redirfile:close()
+      os.remove("302file")
+      return wget.actions.EXIT
+    elseif not string.match(foundurl, "https?://") then
+      io.stdout:write("Something went wrong!! ABORTING  \n")
+      io.stdout:flush()
+      return wget.actions.ABORT
+    end
+    redirfile:close()
+    os.remove("302file")
+    io.stdout:write(".  \n")
+    io.stdout:flush()
   end
   
   if string.match(url["url"], "/[0-9]+/_/[0-9]+/_/[0-9]+") and status_code == 302 then
