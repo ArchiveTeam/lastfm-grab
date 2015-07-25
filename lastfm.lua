@@ -20,6 +20,16 @@ read_file = function(file)
   end
 end
 
+line_num = function(linenum, filename)
+  local num = 0
+  for line in io.lines(filename) do
+    num = num + 1
+    if num == linenum then
+      return line
+    end
+  end
+end
+
 wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_parsed, iri, verdict, reason)
   local url = urlpos["url"]["url"]
   local html = urlpos["link_expect_html"]
@@ -28,7 +38,7 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
     return false
   end
   
-  if (item_type == "forum" or item_type == "forumlang") and (downloaded[url] ~= true or addedtolist[url] ~= true) then
+  if (item_type == "forum" or item_type == "forumlang") and (downloaded[url] ~= true and addedtolist[url] ~= true) then
     if string.match(url, "/"..item_value.."[0-9][0-9]") then
       if (string.match(url, "https?://last%.[^/]+/") or string.match(url, "https?://lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.last%.[^/]+/")) and not (string.match(url, "/"..item_value.."[0-9][0-9][0-9]")) then
         addedtolist[url] = true
@@ -37,16 +47,20 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
         return false
       end
     elseif html == 0 then
+      addedtolist[url] = true
       return true
     else
       return false
     end
-  elseif item_type == "forum" and (downloaded[url] ~= true or addedtolist[url] ~= true) then
-    if string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")) then
+  elseif item_type == "user" and (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "setlang=") or string.match(url, "%?from=[0-9]+") or string.match(url, "&from=[0-9]+") or string.match(url, "%%5C") or string.match(url, '"') or string.match(url, "dws%.cbsimg%.net") or string.match(url, "dw%.cbsimg%.net")) then
+    if string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or html == 0 or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")) then
+      addedtolist[url] = true
       return true
     else
       return false
     end
+  else
+    return false
   end
 end
 
@@ -56,7 +70,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   local html = nil
   
   local function check(url)
-    if (string.match(url, "https?://last%.[^/]+/") or string.match(url, "https?://lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.last%.[^/]+/")) and (downloaded[url] ~= true and addedtolist[url] ~= true) and not string.match(url, "/static/") then
+    if (string.match(url, "https?://last%.[^/]+/") or string.match(url, "https?://lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.last%.[^/]+/")) and (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "setlang=") or string.match(url, "%?from=[0-9]+") or string.match(url, "&from=[0-9]+") or string.match(url, "%%5C") or string.match(url, '"')) then
       if (item_type == "user" and (string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")))) or item_type ~= "user" then
         if string.match(url, "&amp;") then
           table.insert(urls, { url=string.gsub(url, "&amp;", "&") })
@@ -212,33 +226,34 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
       return wget.actions.ABORT
     end
     local redirfile = io.open("302file", "r")
-    local foundurl = redirfile:read("*all")
-    io.stdout:write("Found "..foundurl.." after redirect")
-    io.stdout:flush()
-    if downloaded[foundurl] == true or addedtolist[foundurl] == true then
-      io.stdout:write(", this url has already been downloaded or added to the list to be downloaded, so it is skipped.  \n")
+    local fullfile = redirfile:read("*all")
+    local numlinks = 0
+    for newurl in string.gmatch(fullfile, "https?://") do
+      numlinks = numlinks + 1
+    end
+    local foundurl = line_num(2, "302file")
+    if numlinks > 1 then
+      io.stdout:write("Found "..foundurl.." after redirect")
       io.stdout:flush()
+      if downloaded[foundurl] == true or addedtolist[foundurl] == true then
+        io.stdout:write(", this url has already been downloaded or added to the list to be downloaded, so it is skipped.  \n")
+        io.stdout:flush()
+        redirfile:close()
+        os.remove("302file")
+        return wget.actions.EXIT
+      elseif not string.match(foundurl, "https?://") then
+        io.stdout:write("Something went wrong!! ABORTING  \n")
+        io.stdout:flush()
+        return wget.actions.ABORT
+      end
       redirfile:close()
       os.remove("302file")
-      return wget.actions.EXIT
-    elseif not string.match(foundurl, "https?://") then
-      io.stdout:write("Something went wrong!! ABORTING  \n")
+      io.stdout:write(".  \n")
       io.stdout:flush()
-      return wget.actions.ABORT
     end
-    redirfile:close()
-    os.remove("302file")
-    io.stdout:write(".  \n")
-    io.stdout:flush()
   end
   
-  if string.match(url["url"], "/[0-9]+/_/[0-9]+/_/[0-9]+") and status_code == 302 then
-    return wget.actions.EXIT
-  elseif (status_code == 0 or status_code >= 500 or (status_code >= 400 and status_code ~= 404 and status_code ~= 403)) and not string.match(url["url"], "last%.fm") then    
-    io.stdout:write("Url skipped "..http_stat.statcode..". \n")
-    io.stdout:flush()
-    return wget.actions.EXIT
-  elseif status_code >= 500 or
+  if status_code >= 500 or
     (status_code >= 400 and status_code ~= 404 and status_code ~= 403) then
     io.stdout:write("\nServer returned "..http_stat.statcode..". Sleeping.\n")
     io.stdout:flush()
@@ -251,7 +266,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
       io.stdout:write("\nI give up...\n")
       io.stdout:flush()
       tries = 0
-      return wget.actions.EXIT
+      return wget.actions.ABORT
     else
       return wget.actions.CONTINUE
     end
@@ -267,7 +282,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
       io.stdout:write("\nI give up...\n")
       io.stdout:flush()
       tries = 0
-      return wget.actions.EXIT
+      return wget.actions.ABORT
     else
       return wget.actions.CONTINUE
     end
