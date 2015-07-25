@@ -57,7 +57,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20150721.01"
+VERSION = "20150725.01"
 USER_AGENT = 'ArchiveTeam'
 TRACKER_ID = 'lastfm'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -173,12 +173,13 @@ class WgetArgs(object):
             "--truncate-output",
             "-e", "robots=off",
             "--rotate-dns",
-#            "--recursive", "--level=inf",
+            "--no-cookies",
+            "--recursive", "--level=inf",
             "--no-parent",
-#            "--page-requisites",
+            "--page-requisites",
             "--timeout", "30",
             "--tries", "inf",
-#            "--domains", "last.fm",
+            "--domains", "last.fm,lastfm.de,lastfm.es,lastfm.fr,lastfm.it,lastfm.jp,lastfm.pl,lastfm.com.br,lastfm.ru,lastfm.se,lastfm.com.tr",
             "--span-hosts",
             "--waitretry", "30",
             "--warc-file", ItemInterpolation("%(item_dir)s/%(warc_file_base)s"),
