@@ -57,7 +57,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20150726.02"
+VERSION = "20150726.03"
 USER_AGENT = 'ArchiveTeam'
 TRACKER_ID = 'lastfm'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -195,7 +195,7 @@ class WgetArgs(object):
         item['item_type'] = item_type
         item['item_value'] = item_value
         
-        assert item_type in ('forum', 'forumlang', 'user')
+        assert item_type in ('forum', 'forumlang', 'useren')
         
         if item_type == 'forum':
             suffixesa = string.digits
@@ -210,11 +210,9 @@ class WgetArgs(object):
             for url in ['http://{3}/forum/_/{0}{1}{2}'.format(item_value, a, b, site) for a in suffixesa for b in suffixesb for site in sites]:
                 wget_args.append(url)
             wget_args.extend(["--domains", "lastfm.de,lastfm.es,lastfm.fr,lastfm.it,lastfm.jp,lastfm.pl,lastfm.com.br,lastfm.ru,lastfm.se,lastfm.com.tr,cn.last.fm"])
-        if item_type == 'user':
-            sites = ["www.last.fm", "www.lastfm.de", "www.lastfm.es", "www.lastfm.fr", "www.lastfm.it", "www.lastfm.jp", "www.lastfm.pl", "www.lastfm.com.br", "www.lastfm.ru", "www.lastfm.se", "www.lastfm.com.tr", "cn.last.fm"]
-            for url in ['http://{0}/user/{1}'.format(site, item_value) for site in sites]:
-                wget_args.append(url)
-            wget_args.extend(["--domains", "last.fm,lastfm.de,lastfm.es,lastfm.fr,lastfm.it,lastfm.jp,lastfm.pl,lastfm.com.br,lastfm.ru,lastfm.se,lastfm.com.tr,cn.last.fm"])
+        if item_type == 'useren':
+            wget_args.append('http://www.last.fm/user/{0}'.format(item_value))
+            wget_args.extend(["--domains", "last.fm"])
         else:
             raise Exception('Unknown item')
         
