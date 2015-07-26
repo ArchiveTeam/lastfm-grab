@@ -34,28 +34,32 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
   local url = urlpos["url"]["url"]
   local html = urlpos["link_expect_html"]
   
-  if downloaded[url] == true or addedtolist[url] == true then
+  if downloaded[string.match(url, "https?://(.+)")] == true or addedtolist[string.match(url, "https?://(.+)")] == true then
     return false
   end
   
-  if (item_type == "forum" or item_type == "forumlang") and (downloaded[url] ~= true and addedtolist[url] ~= true) then
+  if (item_type == "forum" or item_type == "forumlang") and (downloaded[string.match(url, "https?://(.+)")] ~= true and addedtolist[string.match(url, "https?://(.+)")] ~= true) then
     if string.match(url, "/"..item_value.."[0-9][0-9]") then
       if (string.match(url, "https?://last%.[^/]+/") or string.match(url, "https?://lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.last%.[^/]+/")) and not (string.match(url, "/"..item_value.."[0-9][0-9][0-9]")) then
-        addedtolist[url] = true
+        addedtolist[string.match(url, "https?://(.+)")] = true
         return true
       else
         return false
       end
     elseif html == 0 then
-      addedtolist[url] = true
+      addedtolist[string.match(url, "https?://(.+)")] = true
       return true
     else
       return false
     end
-  elseif item_type == "user" and (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "setlang=") or string.match(url, "%?from=[0-9]+") or string.match(url, "&from=[0-9]+") or string.match(url, "%%5C") or string.match(url, '"') or string.match(url, "dws%.cbsimg%.net") or string.match(url, "dw%.cbsimg%.net")) then
+  elseif string.match(item_type, "user") and (downloaded[string.match(url, "https?://(.+)")] ~= true and addedtolist[string.match(url, "https?://(.+)")] ~= true) and not (string.match(url, "setlang=") or string.match(url, "%?from=[0-9]+") or string.match(url, "&from=[0-9]+") or string.match(url, "%%5C") or string.match(url, '"') or string.match(url, "dws%.cbsimg%.net") or string.match(url, "dw%.cbsimg%.net")) then
     if string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or html == 0 or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")) then
-      addedtolist[url] = true
-      return true
+      if item_type == "useren" and (string.match(url, "audioscrobbler%.com") or string.match(url, "https?://last%.fm") or html == 0 or string.match(url, "https?://[^%.]+%.last%.fm")) and not string.match(url, "https?://cn%.last%.fm") then
+        addedtolist[string.match(url, "https?://(.+)")] = true
+        return true
+      else
+        return false
+      end
     else
       return false
     end
@@ -69,20 +73,41 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   local urls = {}
   local html = nil
   
+  local function secondcheck(url)
+    if string.match(url, "&amp;") then
+      table.insert(urls, { url=string.gsub(url, "&amp;", "&") })
+      addedtolist[string.match(string.gsub(url, "&amp;", "&"), "https?://(.+)")] = true
+      addedtolist[string.match(url, "https?://(.+)")] = true
+    else
+      table.insert(urls, { url=url })
+      addedtolist[string.match(url, "https?://(.+)")] = true
+    end
+  end
+    
+  
   local function check(url)
-    if (string.match(url, "https?://last%.[^/]+/") or string.match(url, "https?://lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.last%.[^/]+/")) and (downloaded[url] ~= true and addedtolist[url] ~= true) and not (string.match(url, "setlang=") or string.match(url, "%?from=[0-9]+") or string.match(url, "&from=[0-9]+") or string.match(url, "%%5C") or string.match(url, '"')) then
-      if (item_type == "user" and (string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")))) or item_type ~= "user" then
-        if string.match(url, "&amp;") then
-          table.insert(urls, { url=string.gsub(url, "&amp;", "&") })
-          addedtolist[string.gsub(url, "&amp;", "&")] = true
-          addedtolist[url] = true
-        else
-          table.insert(urls, { url=url })
-          addedtolist[url] = true
+    if downloaded[string.match(url, "https?://(.+)")] ~= true and addedtolist[string.match(url, "https?://(.+)")] ~= true and not (string.match(url, "setlang=") or string.match(url, "%?from=[0-9]+") or string.match(url, "&from=[0-9]+") or string.match(url, "%%5C") or string.match(url, '"')) then
+      if (string.match(item_type, "user") and (string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")))) or not string.match(item_type, "user") then
+        if item_type == "useren" and (string.match(url, "audioscrobbler%.com") or string.match(url, "https?://last%.fm") or string.match(url, "https?://[^%.]+%.last%.fm")) and not string.match(url, "https?://cn%.last%.fm") then
+          secondcheck(url)
         end
       end
     end
   end
+
+--    if ((string.match(url, "https?://last%.[^/]+/") or string.match(url, "https?://lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.lastfm%.[^/]+/") or string.match(url, "https?://[^%.]+%.last%.[^/]+/")) and (item_type == "forum" or )) and (downloaded[url] ~= true and addedtolist[url] ~= true) then
+--      if (item_type == "user" and (string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")))) or item_type ~= "user" then
+--        if string.match(url, "&amp;") then
+--          table.insert(urls, { url=string.gsub(url, "&amp;", "&") })
+--          addedtolist[string.gsub(url, "&amp;", "&")] = true
+--          addedtolist[url] = true
+--        else
+--          table.insert(urls, { url=url })
+--          addedtolist[url] = true
+--        end
+--      end
+--    end
+--  end
   
   if item_type == "forum" then
     if string.match(url, "/"..item_value) then
@@ -174,7 +199,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
         end
       end
     end
-  elseif item_type == "user" then
+  elseif item_type == "useren" then
     if string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")) then
       html = read_file(file)
       for newurl in string.gmatch(html, '"(https?://[^"]+)"') do
@@ -208,13 +233,17 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
   url_count = url_count + 1
   io.stdout:write(url_count .. "=" .. status_code .. " " .. url["url"] .. ".  \n")
   io.stdout:flush()
+
+  if item_type == "forum" or item_type == "forumlang" then
+    return wget.actions.ABORT
+  end
   
   if (status_code >= 200 and status_code <= 399) or status_code == 403 then
     if string.match(url.url, "https://") then
       local newurl = string.gsub(url.url, "https://", "http://")
-      downloaded[newurl] = true
+      downloaded[string.match(newurl, "https?://(.+)")] = true
     else
-      downloaded[url.url] = true
+      downloaded[string.match(url.url, "https?://(.+)")] = true
     end
   end
 
@@ -237,7 +266,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     if numlinks > 1 then
       io.stdout:write("Found "..foundurl.." after redirect")
       io.stdout:flush()
-      if downloaded[foundurl] == true or addedtolist[foundurl] == true then
+      if downloaded[string.match(foundurl, "https?://(.+)")] == true or addedtolist[string.match(foundurl, "https?://(.+)")] == true then
         io.stdout:write(", this url has already been downloaded or added to the list to be downloaded, so it is skipped.  \n")
         io.stdout:flush()
         redirfile:close()
