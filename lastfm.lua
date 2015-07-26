@@ -221,9 +221,11 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
   if status_code == 302 or status_code == 301 then
     os.execute("python check302.py '"..url["url"].."'")
     if io.open("302file", "r") == nil then
-      io.stdout:write("Something went wrong!! ABORTING  \n")
-      io.stdout:flush()
-      return wget.actions.ABORT
+      if string.match(url["url"], item_value) and (string.match(url["host"], "lastfm%.de") or string.match(url["host"], "lastfm%.es") or string.match(url["host"], "lastfm%.fr") or string.match(url["host"], "lastfm%.it") or string.match(url["host"], "lastfm%.jp") or string.match(url["host"], "lastfm%.pl") or string.match(url["host"], "lastfm%.com%.br") or string.match(url["host"], "lastfm%.ru") or string.match(url["host"], "lastfm%.se") or string.match(url["host"], "lastfm%.com%.tr") or string.match(url["host"], "last%.fm")) then
+        io.stdout:write("Something went wrong!! ABORTING  \n")
+        io.stdout:flush()
+        return wget.actions.ABORT
+      end
     end
     local redirfile = io.open("302file", "r")
     local fullfile = redirfile:read("*all")
@@ -242,9 +244,11 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
         os.remove("302file")
         return wget.actions.EXIT
       elseif not string.match(foundurl, "https?://") then
-        io.stdout:write("Something went wrong!! ABORTING  \n")
-        io.stdout:flush()
-        return wget.actions.ABORT
+        if string.match(url["url"], item_value) and (string.match(url["host"], "lastfm%.de") or string.match(url["host"], "lastfm%.es") or string.match(url["host"], "lastfm%.fr") or string.match(url["host"], "lastfm%.it") or string.match(url["host"], "lastfm%.jp") or string.match(url["host"], "lastfm%.pl") or string.match(url["host"], "lastfm%.com%.br") or string.match(url["host"], "lastfm%.ru") or string.match(url["host"], "lastfm%.se") or string.match(url["host"], "lastfm%.com%.tr") or string.match(url["host"], "last%.fm")) then
+          io.stdout:write("Something went wrong!! ABORTING  \n")
+          io.stdout:flush()
+          return wget.actions.ABORT
+        end
       end
       redirfile:close()
       os.remove("302file")
