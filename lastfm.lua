@@ -262,11 +262,16 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
 
     tries = tries + 1
 
-    if tries >= 10 then
+    if tries >= 4 and string.match(url["url"], item_value) and (string.match(url["host"], "lastfm%.de") or string.match(url["host"], "lastfm%.es") or string.match(url["host"], "lastfm%.fr") or string.match(url["host"], "lastfm%.it") or string.match(url["host"], "lastfm%.jp") or string.match(url["host"], "lastfm%.pl") or string.match(url["host"], "lastfm%.com%.br") or string.match(url["host"], "lastfm%.ru") or string.match(url["host"], "lastfm%.se") or string.match(url["host"], "lastfm%.com%.tr") or string.match(url["host"], "last%.fm")) then
       io.stdout:write("\nI give up...\n")
       io.stdout:flush()
       tries = 0
       return wget.actions.ABORT
+    elseif tries >= 4 then
+      io.stdout:write("\nI give up...\n")
+      io.stdout:flush()
+      tries = 0
+      return wget.actions.EXIT
     else
       return wget.actions.CONTINUE
     end
@@ -278,11 +283,16 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     
     tries = tries + 1
 
-    if tries >= 10 then
+    if tries >= 4 and string.match(url["url"], item_value) and (string.match(url["host"], "lastfm%.de") or string.match(url["host"], "lastfm%.es") or string.match(url["host"], "lastfm%.fr") or string.match(url["host"], "lastfm%.it") or string.match(url["host"], "lastfm%.jp") or string.match(url["host"], "lastfm%.pl") or string.match(url["host"], "lastfm%.com%.br") or string.match(url["host"], "lastfm%.ru") or string.match(url["host"], "lastfm%.se") or string.match(url["host"], "lastfm%.com%.tr") or string.match(url["host"], "last%.fm")) then
       io.stdout:write("\nI give up...\n")
       io.stdout:flush()
       tries = 0
       return wget.actions.ABORT
+    elseif tries >= 4 then
+      io.stdout:write("\nI give up...\n")
+      io.stdout:flush()
+      tries = 0
+      return wget.actions.EXIT
     else
       return wget.actions.CONTINUE
     end
