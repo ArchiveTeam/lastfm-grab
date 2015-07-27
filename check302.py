@@ -12,7 +12,7 @@ def main():
         sys.stdout.flush()
         html = requests.get(url)
         if html.status_code == 200 and html.text:
-            print("Succes!")
+            print("Success!")
             sys.stdout.flush()
             redirfile = open('302file', 'w')
             for redirurl in html.history:
@@ -25,7 +25,7 @@ def main():
             redirfile.close()
             break
         elif html.status_code == 404:
-            print("Succes!")
+            print("Success!")
             sys.stdout.flush()
             redirfile = open('302file', 'w')
             redirfile.write(html.url + "\n")
