@@ -510,6 +510,7 @@ downloaded["www.last.fm/static/prototyping/htmlplayer/player.png"] = true
 downloaded["cdn.last.fm/flatness/global/icon_eq.gif"] = true
 downloaded["cdn.last.fm/flatness/responsive/2/noimage/default_user_60_g1.png"] = true
 downloaded["cdn.last.fm/flatness/global/icon_playlist.png"] = true
+downloaded["cdn.last.fm/css/css/231990/events/module.css"] = true
 
 read_file = function(file)
   if file then
@@ -554,7 +555,7 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
     else
       return false
     end
-  elseif string.match(item_type, "user") and (downloaded[string.match(url, "https?://(.+)")] ~= true and addedtolist[string.match(url, "https?://(.+)")] ~= true) and not (string.match(url, "setlang=") or string.match(url, "%?from=[0-9]+") or string.match(url, "&from=[0-9]+") or string.match(url, "%%5C") or string.match(url, '"') or string.match(url, "dws%.cbsimg%.net") or string.match(url, "dw%.cbsimg%.net") or string.match(url, "userserve%-ak%.last%.fm/serve/126/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/126s/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/174s/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/174/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/34s/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/34/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/64s/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/64/[0-9]+%.")) then
+  elseif string.match(item_type, "user") and (downloaded[string.match(url, "https?://(.+)")] ~= true and addedtolist[string.match(url, "https?://(.+)")] ~= true) and not (string.match(url, "setlang=") or string.match(url, "%?from=[0-9]+") or string.match(url, "&from=[0-9]+") or string.match(url, "%%5C") or string.match(url, '"') or string.match(url, "dws%.cbsimg%.net") or string.match(url, "dw%.cbsimg%.net") or string.match(url, "userserve%-ak%.last%.fm/serve/126/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/126s/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/174s/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/174/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/34s/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/34/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/64s/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/64/[0-9]+%.") or string.match(url, "userserve%-ak%.last%.fm/serve/300x300/[0-9]+%.")) then
     if string.match(url, "[^A-Za-z0-9]"..item_value.."[^A-Za-z0-9]") or html == 0 or (string.match(url, "[^A-Za-z0-9]"..item_value) and not string.match(url, "[^A-Za-z0-9]"..item_value..".")) then
       if item_type == "useren" and (string.match(url, "audioscrobbler%.com") or string.match(url, "https?://last%.fm") or html == 0 or string.match(url, "https?://[^%.]+%.last%.fm")) and not string.match(url, "https?://cn%.last%.fm") then
         addedtolist[string.match(url, "https?://(.+)")] = true
